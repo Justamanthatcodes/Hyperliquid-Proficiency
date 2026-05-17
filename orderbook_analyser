@@ -1,0 +1,44 @@
+from hyperliquid.info import Info
+from hyperliquid.utils import constants
+
+# Initialize the client (skip_ws=True means we are using HTTP, not WebSockets yet)
+info = Info(constants.MAINNET_API_URL, skip_ws=True)
+
+# Call the method with () so it executes and saves the real data dictionary
+meta = info.meta()
+
+total_buy_volume = 0
+total_sell_volume = 0
+while True:
+    name = input("Enter the ticker of the information you want to get from hyperliquid: ")
+
+    valid_tickers = [coin["name"] for coin in meta["universe"]]
+
+    if name not in valid_tickers:
+        print("This ticker has not been found please try again")
+    else:
+        print(f"Ticker {name} found! Fetching order book data...")
+        break
+
+coinob = info.l2_snapshot(name)
+best5bids = coinob["levels"][0][:5]
+best5asks = coinob["levels"][1][:5]
+print(best5bids)
+print(best5asks)
+
+for bid in best5bids:
+    total_buy_volume += float(bid["sz"])
+
+for ask in best5asks:
+    total_sell_volume += float(ask["sz"])
+
+mid_prices = info.all_mids()
+Usd_price = float(mid_prices[name])
+usd_buy_vol = total_buy_volume * Usd_price
+usd_sell_vol = total_sell_volume * Usd_price
+
+print(f"The total volume of buys is {total_buy_volume} BTC")
+print(f"The total volume of buys in USD is ${usd_buy_vol}")
+print(f"The total amount of sell volume is {total_sell_volume} BTC")
+print(f"the total volume of sells in USD is ${usd_sell_vol} ")
+
